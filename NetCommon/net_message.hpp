@@ -64,10 +64,16 @@ namespace olc {
                 size_t i = msg.body.size() - sizeof(DataType);
 
                 // Physically copy the data from the vector into the user variable
-                std::memcpy(%data, msg.body.data() + i, sizeof(DataType));
+                std::memcpy(&data, msg.body.data() + i, sizeof(DataType));
 
                 // Shrink the vector to remove read bytes, and reset end position
                 msg.body.resize(i);
+
+                // Recalculate the message size
+                msg.body.resize(i);
+
+                // Return the target message so it can be "chained"
+                return msg;
 
             }
         };
