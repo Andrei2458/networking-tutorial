@@ -20,11 +20,6 @@ int main() {
 
     std::cout << "a:" << a << " b:" << b << " c:" << c << "\n";
 
-    struct {
-        float x;
-        float y;
-    } d[5];
-    
     // put everything in our message
 
     msg << a << b << c;
@@ -40,7 +35,7 @@ int main() {
 
     std::cout << "a: " << a << " b: " << b << " c: " << c << "\n";
 
-
+    // std::cout << msg;
 
     return 0;
 }

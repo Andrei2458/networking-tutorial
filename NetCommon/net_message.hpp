@@ -25,7 +25,7 @@ namespace olc {
             // Override for std::cout compatibility
             // produces friendly description of messages
             // 'friend' as it should be available from every possible location
-            friend std::ostream& operator<< (std::ostream os, message<T> const& msg) {
+            friend std::ostream& operator<< (std::ostream& os, message<T> const& msg) {
                 os << "ID:" << int(msg.header.id) << " Size:" << msg.header.size;
                 return os;
             }
@@ -77,6 +77,23 @@ namespace olc {
 
             }
         };
+
+        // template <typename T>
+        // struct owned_message {
+        //     // tagged to a connection object via a shared pointer
+        //     std::shared_ptr<connection<T>> remote = nullptr;
+        //     // incapsulates a regular message
+        //     message<T> msg;
+
+        //     // Override for std::cout compatibility
+        //     // produces friendly description of messages
+        //     // 'friend' as it should be available from every possible location
+        //     friend std::ostream& operator<<(std::ostream& os, owned_message<T> const& msg) {
+        //         os << msg.msg;
+        //         return os;
+        //     }
+
+        // };
 
         
         
