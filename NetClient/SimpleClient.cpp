@@ -6,36 +6,25 @@ enum class CustomMsgTypes : uint32_t {
     MovePlayer
 };
 
+// class CustomClient : public olc::net::client_interface<CustomMsgTypes>
+class CustomClient : public olc::net::client_interface<CustomMsgTypes> {
+    
+    public:
+        // I want to tell the server that I'm firing a bullet
+        bool FireBullet(float x, float y) {
+            olc::net::message<CustomMsgTypes> msg;
+            msg.header.id = CustomMsgTypes::FireBullet;
+            msg << x << y;
+            Send(msg);
+        }
 
+
+
+};
 int main() {
-    olc::net::message<CustomMsgTypes> msg;
-    // ids can only be from the CustomMsgTypes enum class
-    // error: 
-    // msg.header.id = 8;
-    msg.header.id = CustomMsgTypes::FireBullet;
-
-    int a = 1;
-    bool b = true;
-    float c = 3.14159f;
-
-    std::cout << "a:" << a << " b:" << b << " c:" << c << "\n";
-
-    // put everything in our message
-
-    msg << a << b << c;
-
-    // overwrites the initial values
-    a = 99;
-    b = false;
-    c = 99.0f;
-
-    std::cout << "a:" << a << " b:" << b << " c:" << c << "\n";
-
-    msg >> c >> b >> a;
-
-    std::cout << "a: " << a << " b: " << b << " c: " << c << "\n";
-
-    // std::cout << msg;
+    CustomClient c;
+    c.Connect("community.onelonecoder.com", 60000);
+    c.FireBullet(2.0f, 5.0f);
 
     return 0;
 }
