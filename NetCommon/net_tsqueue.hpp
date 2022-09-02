@@ -26,7 +26,7 @@ namespace olc {
             }
 
             // Adds an item to back of the Queue
-            void push_back(T cosnt& item){
+            void push_back(T const& item){
                 std::scoped_lock lock(muxQueue);
                 deqQueue.emplace_back(std::move(item));
             }
@@ -60,7 +60,7 @@ namespace olc {
             T pop_front() {
                 std::scoped_lock lock(muxQueue);
                 auto temp = std::move(deqQueue.front());
-                deqQueue.pop_front()
+                deqQueue.pop_front();
                 return temp;
             }
 

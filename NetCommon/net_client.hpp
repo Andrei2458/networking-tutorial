@@ -37,7 +37,7 @@ namespace olc {
                         m_connection->ConnectToServer(m_endpoints);
 
                         // Start context thread
-                        thrContext = std::thread([this]() { m.context.run(); });
+                        thrContext = std::thread([this]() { m_context.run(); });
 
 
                     } catch(std::exception& e) {

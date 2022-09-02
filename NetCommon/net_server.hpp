@@ -13,25 +13,62 @@ namespace olc {
             
             public:
                 // port number where the server will listen to
-                server_interface(uint16_t port) {
+                server_interface(uint16_t port)
+                    : m_asioAcceptor(m_asioContext, asio::ip::tcp::endpoint(asio::ip::tcp::endpoint::v4(), port)) {
 
                 }
 
                 virtual ~server_interface() {
-
+                    Stop();
                 }
 
                 bool Start() {
+                    try {
+                        // need to issue some work before the start of the context
+                        WaitForClientConnection();
+                        // start context in a thread of its own
+                        m_threadContext = std::thread([this]() { m_asioContext.run(); });
+                    }
+                    catch (std::exception& e) {
 
+                        // Something prohibeted the server from listening
+                        std::cerr << "[SERVER] Exception: " << e.what() << "\n";
+                        return false;
+                    }
+
+                    std::cout << "[SERVER] Started!\n";
+                    return true;
                 }
 
-                bool Stop() {
+                void Stop() {
+                    // Request the context to close
+                    m_asioContext.stop();
 
+                    // Tidy up the context thread
+                    if(m_threadContext.joinable()) {
+                        m_threadContext.join();
+                    }
+                    // Inform that server stopped
+                    std::cout << "Server Stopped\n!";
                 }
 
                 // ASYNC - Instruct asio to wait for connection
                 void WaitForClientConnection() {
+                    m_asioAcceptor.async_accept(
+                        [this](std::error_code ec, asio::ip::tcp::socket socket)
+                        {
+                           if(!ec) {
 
+                           } else {
+                            // Error has occured durring acceptance
+                            std::cout << "[SERVER New Connection Error: " << ec.message() << "\n";
+                           } 
+
+                           // Prime the asio context with more work - simply wait
+                           // for another connection
+                           WaitForClientConnection();
+                        }
+                    );
                 }
 
                 // Send a message to a specific client
@@ -41,11 +78,49 @@ namespace olc {
                 void MessageAllClients(message<T>> const& msg, std::shared_ptr<connection<T>> pIgnoreClient = nullptr)
             
             protected:
+                // since we know this is a base class - we know that other classes will inherit it
+                // protected gives similar to public access rights for classes that inherit the class
                 // Called when a client connects, you can veto the connection by returning false
                 virtual bool OnClientConnect(std::shared_ptr<connection<T>> client) {
 
                     return false;
                 }
+
+                // Called when a client appears to have disconnected
+                virtual void OnClientDisconnect(std::shared_ptr<connection<T>> client) {
+                    // to remove a player when it disconnects
+                }
+
+                // Called when a message arrives
+                // Tells the server what to do when a message arrives
+                virtual void OnMessage(std::shared_ptr<connection<T>> client, message<T>& msg) {
+
+                }
+
+                // Thread Safe Queue for incoming messages
+                tsqueue<owned_message<T>> m_qMessagesIn;
+
+                // In order to work it needs a context -> a the context needs a thread
+                // Order of declaration is important - it is also the order of initialisation
+                asio::io_context m_asioContext;
+                std::thread m_threadContext;
+
+                // One of the things that the server doesn't have is a socket of its own
+                // It kind of does - but it's hidden from us by the asio library
+                // We need to get the sockets of the connected clients
+                // We can do this via an asio object called an acceptor
+                asio::ip::tcp::acceptor m_asioAcceptor;
+
+                // every client in the system is represented by a numerical Identifier (nID)
+                // the ID number is not relevant as long as it's unique for every connection
+                uint32_t nIDCounter = 10000;
+                // this information will be transmited to the clients when they connect
+                std::vectorr andrei;
+
+
+
+
+
         };
     }
 }
