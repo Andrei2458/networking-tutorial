@@ -31,10 +31,10 @@ namespace olc {
 
                         // Resolve hostname/ip-address into tangiable physical address
                         asio::ip::tcp::resolver resolver(m_context);
-                        m_endpoints = resolver.resolve(host, std::to_string(port));
+                        asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(host, std::to_string(port));
 
                         // Tell the connection object to connect to server
-                        m_connection->ConnectToServer(m_endpoints);
+                        m_connection->ConnectToServer(endpoints);
 
                         // Start context thread
                         thrContext = std::thread([this]() { m_context.run(); });
