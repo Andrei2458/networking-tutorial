@@ -26,12 +26,17 @@ namespace olc {
                 bool Connect(std::string const& host, uint16_t const port) {
                     
                     try {
-                        // Create connection
-                        m_connection = std::make_unique<connection<T>>(); // TODO
-
-                        // Resolve hostname/ip-address into tangiable physical address
+                        // Resolve hostname/ip-address into tangible physical address
                         asio::ip::tcp::resolver resolver(m_context);
+                        // if the host can not be resolved -> an exception will be thrown and caught by our catch block
                         asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(host, std::to_string(port));
+
+                        // Create connection
+                        m_connection = std::make_unique<connection<T>>(
+                            connection<T>::owner::client,
+                            m_context,
+                            asio::ip::tcp::socket(m_context),
+                            m_qMessagesIn);
 
                         // Tell the connection object to connect to server
                         m_connection->ConnectToServer(endpoints);

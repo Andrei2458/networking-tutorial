@@ -62,24 +62,23 @@ namespace olc {
                                 // NO ERRORS - CONNECTION NOT ACCEPTED BY SERVER YET
                                 std::cout << "[Server] New connection: " << socket.remote_endpoint() << "\n";
                             
-                                // Temporarily commented
-                                // std::shared_ptr<connection<T>> newconn = 
-                                //     std::make_shared<connection<T>>(connection<T>::owner::server, 
-                                //         m_asioContext, std::move(socket), m_qMessagesIn);
+                                std::shared_ptr<connection<T>> newconn = 
+                                    std::make_shared<connection<T>>(connection<T>::owner::server, 
+                                        m_asioContext, std::move(socket), m_qMessagesIn);
 
-                                    // // Give the server a change to deny connection
-                                    // if(OnClientConnect(newconn)) {
-                                    //     // Conncetion accepted by the server
-                                    //     // add the current connection in the server's list of conn
-                                    //     m_deqConnections.push_back(std::move(newconn));
-                                    //     // provide an id to the conn
-                                    //     m_deqConnections.back()->ConnectToClient(nIDCounter++);
+                                    // Give the server a change to deny connection
+                                    if(OnClientConnect(newconn)) {
+                                        // Conncetion accepted by the server
+                                        // add the current connection in the server's list of conn
+                                        m_deqConnections.push_back(std::move(newconn));
+                                        // provide an id to the conn
+                                        m_deqConnections.back()->ConnectToClient(nIDCounter++);
 
-                                    //     std::cout << "[" << m_deqConnections.back()->GetID() << "] Connection Approved!\n";
+                                        std::cout << "[" << m_deqConnections.back()->GetID() << "] Connection Approved!\n";
 
-                                    // } else {
-                                    //     std::cout << "[-----] Connection Denied\n";
-                                    // }
+                                    } else {
+                                        std::cout << "[-----] Connection Denied\n";
+                                    }
 
                             } else {
                                 // Error has occured durring acceptance
