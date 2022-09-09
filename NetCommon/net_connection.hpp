@@ -42,7 +42,7 @@ namespace olc {
                     }
                 }
                 // only called by clients
-                bool ConnectToServer(asio::ip::tcp::resolver::results_type const& endpoints) {
+                void ConnectToServer(asio::ip::tcp::resolver::results_type const& endpoints) {
                     //only clients can connect to server
                     if (m_nOwnerType == owner::client) {
                         // Requests asio attempts to connect to an endpoint
@@ -57,7 +57,7 @@ namespace olc {
 
 
                 // can be called by clients and servers
-                bool Disconnect() {
+                void Disconnect() {
                     if (IsConnected()) {
                         asio::post(m_asioContext, [this]() { m_socket.close(); });
                     }
@@ -70,7 +70,7 @@ namespace olc {
 
                 // send a message
                 // post function is used to inject work into a context
-                bool Send(message<T> const& msg) {
+                void Send(message<T> const& msg) {
                     asio::post(m_asioContext,
                         [this, msg](){
                             // check if messages are already being written
@@ -96,7 +96,7 @@ namespace olc {
                                     ReadBody();
                                 } else {
                                     // empty message received
-                                    AddToIncomingMessageQue();
+                                    AddToIncomingMessageQueue();
                                 }
 
                             } else {
@@ -163,7 +163,7 @@ namespace olc {
 
                 void AddToIncomingMessageQueue() {
                     if (m_nOwnerType == owner::server) {
-                        m_qMessagesIn.push_back({ this->shared_from_this(), m_msgTemporaryIn })
+                        m_qMessagesIn.push_back({ this->shared_from_this(), m_msgTemporaryIn });
                     } else {
                         // if the message comes from a client
                         // clients have only one connection so it is not relevant 
