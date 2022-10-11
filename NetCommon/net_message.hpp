@@ -18,6 +18,7 @@ namespace olc {
             message_header<T> header{};
             std::vector<uint8_t> body;
 
+            // returns size of entire message packet in bytes
             size_t size() const {
                 return sizeof(message_header<T>) + body.size();
             }
@@ -25,7 +26,7 @@ namespace olc {
             // Override for std::cout compatibility
             // produces friendly description of messages
             // 'friend' as it should be available from every possible location
-            friend std::ostream& operator<< (std::ostream& os, message<T> const& msg) {
+            friend std::ostream& operator << (std::ostream& os, message<T> const& msg) {
                 os << "ID:" << int(msg.header.id) << " Size:" << msg.header.size;
                 return os;
             }
@@ -33,7 +34,7 @@ namespace olc {
             //Pushes any POD-like data into the message buffer
             // if the user pushes a float -> DataType becomes float, if the users pushes an int, DataType becomes int ...
             template<typename DataType>
-            friend message<T>& operator<< (message<T>& msg, DataType const& data) {
+            friend message<T>& operator << (message<T>& msg, const DataType& data) {
 
                 // check data the data type provided to this function is of type standard layout (google it)
                 // due to static_assert the message is posted if the DataType is not standard layot (expression evaluated as false)
@@ -56,7 +57,8 @@ namespace olc {
             }
 
             template<typename DataType> 
-            friend message<T>& operator>> (message<T>& msg, DataType& data) {
+            friend message<T>& operator >> (message<T>& msg, DataType& data) {
+
                 // Check that the type of the data being pushed is trivially copyable
                 static_assert(std::is_standard_layout<DataType>::value, "Data is to complex to be pushed into vector!\n");
             
@@ -70,7 +72,7 @@ namespace olc {
                 msg.body.resize(i);
 
                 // Recalculate the message size
-                msg.body.resize(i);
+                msg.header.size = msg.size();
 
                 // Return the target message so it can be "chained"
                 return msg;
@@ -84,6 +86,7 @@ namespace olc {
 
         template <typename T>
         struct owned_message {
+            
             // tagged to a connection object via a shared pointer
             std::shared_ptr<connection<T>> remote = nullptr;
             // incapsulates a regular message
@@ -92,7 +95,7 @@ namespace olc {
             // Override for std::cout compatibility
             // produces friendly description of messages
             // 'friend' as it should be available from every possible location
-            friend std::ostream& operator<<(std::ostream& os, owned_message<T> const& msg) {
+            friend std::ostream& operator << (std::ostream& os, const owned_message<T>& msg) {
                 os << msg.msg;
                 return os;
             }

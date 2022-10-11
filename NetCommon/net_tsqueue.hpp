@@ -2,38 +2,40 @@
 #include "net_common.hpp"
 
 namespace olc {
+
     namespace net {
+
         template<typename T>
         class tsqueue {
-            public: 
+        public: 
             // default constructor
             tsqueue() = default;
             // not allow the queue to be copied
-            tsqueue(tsqueue<T> const&) = delete;
+            tsqueue(const tsqueue<T>&) = delete;
             // destructor that uses the clear function
             virtual ~tsqueue() { clear(); }
 
-            // Returns and maintains item ath front of Queue
-            T const& front() {
+        public: 
+            // Returns and maintains item at front of Queue
+            const T& front() {
                 std::scoped_lock lock(muxQueue);
                 return deqQueue.front();
             }
 
             // Return and maintains item at the back of the queue
-            T const& back() {
+            const T& back() {
                 std::scoped_lock lock(muxQueue);
                 return deqQueue.back();
             }
 
             // Adds an item to back of the Queue
-            void push_back(T const& item){
+            void push_back(const T& item){
                 std::scoped_lock lock(muxQueue);
                 deqQueue.emplace_back(std::move(item));
             }
 
-            // Adds an item to the fron of the Queue
-
-            void push_front(T const& item) {
+            // Adds an item to the front of the Queue
+            void push_front(const T& item) {
                 std::scoped_lock lock(muxQueue);
                 deqQueue.emplace_front(std::move(item));
             }
@@ -45,12 +47,12 @@ namespace olc {
             }
 
             // Return number of items in Queue
-
             size_t count() {
                 std::scoped_lock lock (muxQueue);
                 return deqQueue.size();
             }
 
+            // Clears Queue
             void clear() {
                 std::scoped_lock lock(muxQueue);
                 deqQueue.clear();
@@ -59,24 +61,24 @@ namespace olc {
             // Removes and returns item from front of queue
             T pop_front() {
                 std::scoped_lock lock(muxQueue);
-                auto temp = std::move(deqQueue.front());
+                auto cached_front = std::move(deqQueue.front());
                 deqQueue.pop_front();
-                return temp;
+                return cached_front;
             }
 
             // Removes and returns item from back of queue
             T pop_back() {
                 std::scoped_lock lock(muxQueue);
-                auto temp = std::move(deqQueue.back());
+                auto cached_back = std::move(deqQueue.back());
                 deqQueue.pop_back();
-                return temp;
+                return cached_back;
             }
 
-            protected:
-                // mutex protects shared data to be simulateniously accessed from multiple sources
-                std::mutex muxQueue;
-                // double ended queue
-                std::deque<T> deqQueue;
+        protected:
+            // mutex protects shared data(the double ended que - deqQueue) to be simulateniously accessed from multiple sources
+            std::mutex muxQueue;
+            // double ended queue
+            std::deque<T> deqQueue;
         };
     }
 }

@@ -52,3 +52,34 @@
 //     std::cout << "you pressed: " << input << "\n";
 
 // }
+#include <iostream>
+
+int main() {
+    bool bQuit = false;
+    while (!bQuit) {
+
+        // get input from user
+        int input = 0;
+        std::cout << "Choose a message to send...\n";
+        std::cin >> input;
+    
+        switch (input)
+        {
+            case 1:
+                std::cout << "ping server\n";
+                break;
+            
+            case 2:
+                std::cout << "case 2 entered\n";
+                break;
+            case 3:
+                std::cout << "Exiting...\n";
+                bQuit = true;
+                break;
+            default:
+                std::cout << "No valid option choosen!\n";
+                break;
+        }
+    }
+    return 0;
+}
