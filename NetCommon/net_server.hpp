@@ -26,6 +26,9 @@ namespace olc {
             bool Start() {
                 try {
                     // need to issue some work before the start of the context
+					// prevent it from exiting immediately. Since this is a server, we 
+					// want it primed ready to handle clients trying to
+					// connect.
                     WaitForClientConnection();
                     // start context in a thread of its own
                     m_threadContext = std::thread([this]() { m_asioContext.run(); });
@@ -55,31 +58,36 @@ namespace olc {
 
             // ASYNC - Instruct asio to wait for connection
             void WaitForClientConnection() {
+                // Prime context with an instruction to wait until a socket connects. This
+				// is the purpose of an "acceptor" object. It will provide a unique socket
+				// for each incoming connection attempt
                 m_asioAcceptor.async_accept(
                     [this](std::error_code ec, asio::ip::tcp::socket socket)
                     {
-                       if(!ec) {
+                        // Triggered by incoming connection requests
+                        if(!ec) {
 
                             // NO ERRORS - CONNECTION NOT ACCEPTED BY SERVER YET
                             std::cout << "[Server] New connection: " << socket.remote_endpoint() << "\n";
-                        
+
+                            // Create a new connection to handle this client
                             std::shared_ptr<connection<T>> newconn = 
                                 std::make_shared<connection<T>>(connection<T>::owner::server, 
                                     m_asioContext, std::move(socket), m_qMessagesIn);
 
                             // Give the server a change to deny connection
                             if(OnClientConnect(newconn)) {
-                                    // Conncetion accepted by the server
-                                    // add the current connection in the server's list of conn
-                                    m_deqConnections.push_back(std::move(newconn));
-                                    // provide an id to the conn
-                                    m_deqConnections.back()->ConnectToClient(nIDCounter++);
+                                // Conncetion accepted by the server
+                                // add the current connection in the server's list of conn
+                                m_deqConnections.push_back(std::move(newconn));
+                                // provide an id to the conn
+                                m_deqConnections.back()->ConnectToClient(nIDCounter++);
 
-                                    std::cout << "[" << m_deqConnections.back()->GetID() << "] Connection Approved!\n";
+                                std::cout << "[" << m_deqConnections.back()->GetID() << "] Connection Approved!\n";
 
-                                } else {
-                                    std::cout << "[-----] Connection Denied\n";
-                                }
+                            } else {
+                                std::cout << "[-----] Connection Denied\n";
+                            }
 
                         } else {
                             // Error has occured durring acceptance
@@ -130,14 +138,21 @@ namespace olc {
                 // Erase not valid connections outside the loop
                 // Otherwise we would change the collection while we were iterrating through it <- NOT OK
                 if(bInvalidClientsExists) {
-                    m_deqConnections.erase(std::remove(begin(m_deqConnections), end(m_deqConnections), nullptr), end(m_deqConnections));
+                    m_deqConnections.erase(
+                        std::remove(begin(m_deqConnections), end(m_deqConnections), nullptr), end(m_deqConnections));
                 }
             }
 
             // size_t is an unsigned integer
             // setting it to '-1' sets it to the maximum value
-            void Update(size_t nMaxMessages = -1) {
+            void Update(size_t nMaxMessages = -1, bool bWait = false) {
 
+                if (bWait) {
+                    m_qMessagesIn.wait();
+                }
+
+                // Process as many messages as you can up to the value
+				// specified
                 size_t nMessageCount = 0;
                 while (nMessageCount < nMaxMessages && !m_qMessagesIn.empty()) {
 
